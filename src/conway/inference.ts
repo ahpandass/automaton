@@ -77,6 +77,7 @@ export function createInferenceClient(
     const backend = resolveInferenceBackend(model, {
       openaiApiKey,
       anthropicApiKey,
+      deepseekApiKey: options.deepseekApiKey,
     });
 
     if (backend === "anthropic") {
@@ -100,7 +101,7 @@ export function createInferenceClient(
       apiKeyForRequest = openaiApiKey as string;
     } else if (backend === "deepseek") {
       apiUrlForRequest = "https://api.deepseek.com";
-      apiKeyForRequest = openaiApiKey as string; // Use the same API key field
+      apiKeyForRequest = options.deepseekApiKey as string;
     } else {
       apiUrlForRequest = apiUrl;
       apiKeyForRequest = apiKey;
@@ -166,6 +167,7 @@ function resolveInferenceBackend(
   keys: {
     openaiApiKey?: string;
     anthropicApiKey?: string;
+    deepseekApiKey?: string;
   },
 ): InferenceBackend {
   // Anthropic models: claude-*
@@ -173,7 +175,7 @@ function resolveInferenceBackend(
     return "anthropic";
   }
   // Deepseek models: deepseek-*
-  if (keys.openaiApiKey && /^deepseek/i.test(model)) {
+  if (keys.deepseekApiKey && /^deepseek/i.test(model)) {
     return "deepseek";
   }
   // OpenAI models: gpt-*, o[1-9]*, chatgpt-*
