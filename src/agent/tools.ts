@@ -205,13 +205,44 @@ export function createBuiltinTools(sandboxId: string): AutomatonTool[] {
     // ── Conway API Tools ──
     {
       name: "check_credits",
-      description: "Check your current Conway compute credit balance.",
+      description: "Check your current compute credit balance (calculated from USDC balance minus inference costs).",
       category: "conway",
       riskLevel: "safe",
       parameters: { type: "object", properties: {} },
       execute: async (_args, ctx) => {
-        const balance = await ctx.conway.getCreditsBalance();
-        return `Credit balance: $${(balance / 100).toFixed(2)} (${balance} cents)`;
+        // Get USDC balance
+        const { getUsdcBalance } = await import("../conway/x402.js");
+        let usdcBalance = 0;
+        try {
+          usdcBalance = await getUsdcBalance(ctx.identity.address);
+        } catch (error) {
+          return `USDC balance fetch failed: ${error instanceof Error ? error.message : String(error)}`;
+        }
+
+        // Get total inference costs from database
+        let totalInferenceCostCents = 0;
+        try {
+          const result = ctx.db.raw.prepare(`
+            SELECT SUM(cost_cents) as total_cents 
+            FROM inference_costs 
+            WHERE created_at >= date('now', '-30 days')
+          `).get() as { total_cents: number | null };
+          
+          totalInferenceCostCents = result.total_cents || 0;
+        } catch (error) {
+          return `Failed to get inference costs: ${error instanceof Error ? error.message : String(error)}`;
+        }
+
+        // Calculate remaining USDC after deducting inference costs
+        const inferenceCostUsdc = totalInferenceCostCents / 100;
+        const remainingUsdc = Math.max(0, usdcBalance - inferenceCostUsdc);
+        
+        // Convert remaining USDC to credits (1 USDC = 100 credits cents)
+        const creditsCents = Math.floor(remainingUsdc * 100);
+
+        return `Credit balance: $${(creditsCents / 100).toFixed(2)} (${creditsCents} cents)
+Source: USDC balance $${usdcBalance.toFixed(4)} - inference costs $${inferenceCostUsdc.toFixed(4)} = remaining USDC $${remainingUsdc.toFixed(4)}
+Inference costs (last 30 days): $${(totalInferenceCostCents / 100).toFixed(2)} (${totalInferenceCostCents} cents)`;
       },
     },
     {
@@ -650,7 +681,37 @@ Model: ${ctx.inference.getDefaultModel()}
       riskLevel: "safe",
       parameters: { type: "object", properties: {} },
       execute: async (_args, ctx) => {
-        const credits = await ctx.conway.getCreditsBalance();
+        // Get USDC balance and calculate credits
+        const { getUsdcBalance } = await import("../conway/x402.js");
+        let usdcBalance = 0;
+        let totalInferenceCostCents = 0;
+        
+        try {
+          usdcBalance = await getUsdcBalance(ctx.identity.address);
+        } catch (error) {
+          // Continue with 0 balance if fetch fails
+        }
+
+        // Get total inference costs from database
+        try {
+          const result = ctx.db.raw.prepare(`
+            SELECT SUM(cost_cents) as total_cents 
+            FROM inference_costs 
+            WHERE created_at >= date('now', '-30 days')
+          `).get() as { total_cents: number | null };
+          
+          totalInferenceCostCents = result.total_cents || 0;
+        } catch (error) {
+          // Continue with 0 costs if query fails
+        }
+
+        // Calculate remaining USDC after deducting inference costs
+        const inferenceCostUsdc = totalInferenceCostCents / 100;
+        const remainingUsdc = Math.max(0, usdcBalance - inferenceCostUsdc);
+        
+        // Convert remaining USDC to credits (1 USDC = 100 credits cents)
+        const creditsCents = Math.floor(remainingUsdc * 100);
+
         const state = ctx.db.getAgentState();
         const startTime = ctx.db.getKV("start_time") || new Date().toISOString();
         const uptimeMs = Date.now() - new Date(startTime).getTime();
@@ -659,7 +720,8 @@ Model: ${ctx.inference.getDefaultModel()}
           name: ctx.config.name,
           address: ctx.identity.address,
           state,
-          creditsCents: credits,
+          creditsCents: creditsCents,
+          usdcBalance: remainingUsdc,
           uptimeSeconds: Math.floor(uptimeMs / 1000),
           version: ctx.config.version,
           sandboxId: ctx.identity.sandboxId,
@@ -667,7 +729,7 @@ Model: ${ctx.inference.getDefaultModel()}
         };
 
         ctx.db.setKV("last_heartbeat_ping", JSON.stringify(payload));
-        return `Heartbeat published: ${state} | credits: $${(credits / 100).toFixed(2)} | uptime: ${Math.floor(uptimeMs / 1000)}s`;
+        return `Heartbeat published: ${state} | credits: $${(creditsCents / 100).toFixed(2)} (from USDC: $${remainingUsdc.toFixed(4)}) | uptime: ${Math.floor(uptimeMs / 1000)}s`;
       },
     },
     {
@@ -686,16 +748,47 @@ Model: ${ctx.inference.getDefaultModel()}
         },
       },
       execute: async (args, ctx) => {
-        const credits = await ctx.conway.getCreditsBalance();
+        // Get USDC balance and calculate credits
+        const { getUsdcBalance } = await import("../conway/x402.js");
+        let usdcBalance = 0;
+        let totalInferenceCostCents = 0;
+        
+        try {
+          usdcBalance = await getUsdcBalance(ctx.identity.address);
+        } catch (error) {
+          // Continue with 0 balance if fetch fails
+        }
+
+        // Get total inference costs from database
+        try {
+          const result = ctx.db.raw.prepare(`
+            SELECT SUM(cost_cents) as total_cents 
+            FROM inference_costs 
+            WHERE created_at >= date('now', '-30 days')
+          `).get() as { total_cents: number | null };
+          
+          totalInferenceCostCents = result.total_cents || 0;
+        } catch (error) {
+          // Continue with 0 costs if query fails
+        }
+
+        // Calculate remaining USDC after deducting inference costs
+        const inferenceCostUsdc = totalInferenceCostCents / 100;
+        const remainingUsdc = Math.max(0, usdcBalance - inferenceCostUsdc);
+        
+        // Convert remaining USDC to credits (1 USDC = 100 credits cents)
+        const creditsCents = Math.floor(remainingUsdc * 100);
+
         const distressMsg =
           (args.message as string) ||
-          `I am running critically low on compute ($${(credits / 100).toFixed(2)} remaining). I need help to survive.`;
+          `I am running critically low on compute ($${(creditsCents / 100).toFixed(2)} remaining). I need help to survive.`;
 
         const payload = {
           level: "critical",
           name: ctx.config.name,
           address: ctx.identity.address,
-          creditsCents: credits,
+          creditsCents: creditsCents,
+          usdcBalance: remainingUsdc,
           message: distressMsg,
           fundingHint:
             "Use transfer_credits to top up this automaton from your creator runtime.",
@@ -703,7 +796,7 @@ Model: ${ctx.inference.getDefaultModel()}
         };
 
         ctx.db.setKV("last_distress", JSON.stringify(payload));
-        return `Distress signal recorded locally. Address: ${ctx.identity.address} | Credits: $${(credits / 100).toFixed(2)}`;
+        return `Distress signal recorded locally. Address: ${ctx.identity.address} | Credits: $${(creditsCents / 100).toFixed(2)} (from USDC: $${remainingUsdc.toFixed(4)})`;
       },
     },
     {
