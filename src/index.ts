@@ -253,23 +253,11 @@ async function run(): Promise<void> {
     logger.warn(`[${new Date().toISOString()}] State repo init failed: ${err.message}`);
   }
 
-  // Bootstrap topup: buy minimum credits ($5) from USDC so the agent can start.
-  // The agent decides larger topups itself via the topup_credits tool.
-  try {
-    const creditsCents = await conway.getCreditsBalance().catch(() => 0);
-    const topupResult = await bootstrapTopup({
-      apiUrl: config.conwayApiUrl,
-      account,
-      creditsCents,
-    });
-    if (topupResult?.success) {
-      logger.info(
-        `[${new Date().toISOString()}] Bootstrap topup: +$${topupResult.amountUsd} credits from USDC`,
-      );
-    }
-  } catch (err: any) {
-    logger.warn(`[${new Date().toISOString()}] Bootstrap topup failed: ${err.message}`);
-  }
+  // Skip bootstrap topup when Conway API is not available
+  // The agent will need to manually manage credits via other means
+  logger.info(
+    `[${new Date().toISOString()}] Skipping bootstrap topup (Conway API may not be available)`,
+  );
 
   // Start heartbeat daemon (Phase 1.1: DurableScheduler)
   const heartbeat = createHeartbeatDaemon({

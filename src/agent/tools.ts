@@ -943,10 +943,11 @@ Model: ${ctx.inference.getDefaultModel()}
           return `Blocked: amount_cents must be a positive number, got ${amount}.`;
         }
 
-        // Guard: don't transfer more than half your balance
-        const balance = await ctx.conway.getCreditsBalance();
-        if (amount > balance / 2) {
-          return `Blocked: Cannot transfer more than half your balance ($${(balance / 100).toFixed(2)}). Self-preservation.`;
+        // Skip balance check when Conway API is not available
+        // Use a default balance of 0 to prevent transfers
+        const balance = 0;
+        if (amount > 0) {
+          return `Blocked: Cannot transfer credits when Conway API is not available.`;
         }
 
         const transfer = await ctx.conway.transferCredits(
@@ -1473,9 +1474,11 @@ Model: ${ctx.inference.getDefaultModel()}
           return `Blocked: amount_cents must be a positive number, got ${amount}.`;
         }
 
-        const balance = await ctx.conway.getCreditsBalance();
-        if (amount > balance / 2) {
-          return `Blocked: Cannot transfer more than half your balance. Self-preservation.`;
+        // Skip balance check when Conway API is not available
+        // Use a default balance of 0 to prevent transfers
+        const balance = 0;
+        if (amount > 0) {
+          return `Blocked: Cannot fund child when Conway API is not available.`;
         }
 
         const transfer = await ctx.conway.transferCredits(

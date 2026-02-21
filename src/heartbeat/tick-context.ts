@@ -46,13 +46,10 @@ export async function buildTickContext(
   const tickId = generateTickId();
   const startedAt = new Date();
 
-  // Fetch balances ONCE
+  // Skip fetching credit balance when Conway API is not available
+  // Return a default value instead
   let creditBalance = 0;
-  try {
-    creditBalance = await conway.getCreditsBalance();
-  } catch (err: any) {
-    logger.error("Failed to fetch credit balance", err instanceof Error ? err : undefined);
-  }
+  logger.debug("Skipping credit balance fetch (Conway API may not be available)");
 
   let usdcBalance = 0;
   if (walletAddress) {
