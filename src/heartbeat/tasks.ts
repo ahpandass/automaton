@@ -147,12 +147,12 @@ export const BUILTIN_TASKS: Record<string, HeartbeatTaskFn> = {
       timestamp: new Date().toISOString(),
     }));
 
-    // If we have USDC but low credits, wake the agent so it can
-    // decide how much to topup via the topup_credits tool.
+    // Skip topup suggestion when Conway API is not available
+    // The agent cannot purchase credits without Conway API
     if (balance > 5 && credits < 500) {
       return {
         shouldWake: true,
-        message: `USDC available: $${balance.toFixed(2)} but only $${(credits / 100).toFixed(2)} credits. Use topup_credits to buy more.`,
+        message: `USDC available: $${balance.toFixed(2)} but only $${(credits / 100).toFixed(2)} credits. Credit topup is disabled (Conway API not available).`,
       };
     }
 
