@@ -123,7 +123,8 @@ export function createInferenceClient(
    */
   const setLowComputeMode = (enabled: boolean): void => {
     if (enabled) {
-      currentModel = options.lowComputeModel || "gpt-4.1";
+      // Use the configured lowComputeModel, default to deepseek-chat if not set
+      currentModel = options.lowComputeModel || "deepseek-chat";
       maxTokens = 4096;
     } else {
       currentModel = options.defaultModel;
