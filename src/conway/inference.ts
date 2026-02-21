@@ -183,7 +183,9 @@ function resolveInferenceBackend(
   },
 ): InferenceBackend {
   // Debug logging
-  console.error(`[DEBUG] resolveInferenceBackend: model="${model}", deepseekApiKey exists=${!!keys.deepseekApiKey}, trimmed=${keys.deepseekApiKey?.trim()}`);
+  const deepseekApiKeyExists = !!keys.deepseekApiKey;
+  const deepseekApiKeyTrimmed = keys.deepseekApiKey?.trim() || "";
+  console.error(`[DEBUG] resolveInferenceBackend: model="${model}", deepseekApiKey exists=${deepseekApiKeyExists}, trimmed="${deepseekApiKeyTrimmed}", length=${deepseekApiKeyTrimmed.length}`);
   
   // Anthropic models: claude-*
   if (keys.anthropicApiKey && keys.anthropicApiKey.trim() && /^claude/i.test(model)) {
