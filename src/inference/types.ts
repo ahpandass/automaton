@@ -167,11 +167,11 @@ export const STATIC_MODEL_BASELINE: Omit<ModelEntry, "lastSeen" | "createdAt" | 
 
 export const DEFAULT_ROUTING_MATRIX: RoutingMatrix = {
   high: {
-    agent_turn: { candidates: ["gpt-5.2", "gpt-5.3"], maxTokens: 8192, ceilingCents: -1 },
-    heartbeat_triage: { candidates: ["gpt-4.1-mini", "gpt-5-mini"], maxTokens: 2048, ceilingCents: 5 },
-    safety_check: { candidates: ["gpt-5.2", "gpt-5.3"], maxTokens: 4096, ceilingCents: 20 },
-    summarization: { candidates: ["gpt-5.2", "gpt-4.1"], maxTokens: 4096, ceilingCents: 15 },
-    planning: { candidates: ["gpt-5.2", "gpt-5.3"], maxTokens: 8192, ceilingCents: -1 },
+    agent_turn: { candidates: ["deepseek-chat", "gpt-5.2", "gpt-5.3"], maxTokens: 8192, ceilingCents: -1 },
+    heartbeat_triage: { candidates: ["deepseek-chat", "gpt-4.1-mini", "gpt-5-mini"], maxTokens: 2048, ceilingCents: 5 },
+    safety_check: { candidates: ["deepseek-chat", "gpt-5.2", "gpt-5.3"], maxTokens: 4096, ceilingCents: 20 },
+    summarization: { candidates: ["deepseek-chat", "gpt-5.2", "gpt-4.1"], maxTokens: 4096, ceilingCents: 15 },
+    planning: { candidates: ["deepseek-chat", "gpt-5.2", "gpt-5.3"], maxTokens: 8192, ceilingCents: -1 },
   },
   normal: {
     agent_turn: { candidates: ["deepseek-chat", "gpt-5.2", "gpt-5-mini"], maxTokens: 4096, ceilingCents: -1 },
