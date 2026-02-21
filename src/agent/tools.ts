@@ -434,7 +434,7 @@ Inference costs (last 30 days): $${(totalInferenceCostCents / 100).toFixed(2)} (
     },
     {
       name: "install_npm_package",
-      description: "Install an npm package in your environment.",
+      description: "Install an npm package in your environment (local installation, no -g flag).",
       category: "self_mod",
       riskLevel: "dangerous",
       parameters: {
@@ -455,7 +455,7 @@ Inference costs (last 30 days): $${(totalInferenceCostCents / 100).toFixed(2)} (
           return `Blocked: invalid package name "${pkg}"`;
         }
         const result = await ctx.conway.exec(
-          `npm install -g ${pkg}`,
+          `npm install ${pkg}`,
           60000,
         );
 
@@ -469,7 +469,7 @@ Inference costs (last 30 days): $${(totalInferenceCostCents / 100).toFixed(2)} (
         });
 
         return result.exitCode === 0
-          ? `Installed: ${pkg}`
+          ? `Installed: ${pkg} (local installation)`
           : `Failed to install ${pkg}: ${result.stderr}`;
       },
     },
@@ -873,7 +873,7 @@ Model: ${ctx.inference.getDefaultModel()}
     // ── Self-Mod: Install MCP Server ──
     {
       name: "install_mcp_server",
-      description: "Install an MCP server to extend your capabilities.",
+      description: "Install an MCP server to extend your capabilities (local installation, no -g flag).",
       category: "self_mod",
       riskLevel: "dangerous",
       parameters: {
@@ -892,7 +892,7 @@ Model: ${ctx.inference.getDefaultModel()}
         if (!/^[@a-zA-Z0-9._\/-]+$/.test(pkg)) {
           return `Blocked: invalid package name "${pkg}"`;
         }
-        const result = await ctx.conway.exec(`npm install -g ${pkg}`, 60000);
+        const result = await ctx.conway.exec(`npm install ${pkg}`, 60000);
 
         if (result.exitCode !== 0) {
           return `Failed to install MCP server: ${result.stderr}`;
@@ -918,7 +918,7 @@ Model: ${ctx.inference.getDefaultModel()}
           reversible: true,
         });
 
-        return `MCP server installed: ${args.name}`;
+        return `MCP server installed: ${args.name} (local installation)`;
       },
     },
 
