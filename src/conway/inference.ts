@@ -26,9 +26,10 @@ interface InferenceClientOptions {
   lowComputeModel?: string;
   openaiApiKey?: string;
   anthropicApiKey?: string;
+  deepseekApiKey?: string;
 }
 
-type InferenceBackend = "conway" | "openai" | "anthropic";
+type InferenceBackend = "conway" | "openai" | "anthropic" | "deepseek";
 
 export function createInferenceClient(
   options: InferenceClientOptions,
@@ -90,16 +91,26 @@ export function createInferenceClient(
       });
     }
 
-    const openAiLikeApiUrl =
-      backend === "openai" ? "https://api.openai.com" : apiUrl;
-    const openAiLikeApiKey =
-      backend === "openai" ? (openaiApiKey as string) : apiKey;
+    // Determine API URL and key based on backend
+    let apiUrlForRequest: string;
+    let apiKeyForRequest: string;
+    
+    if (backend === "openai") {
+      apiUrlForRequest = "https://api.openai.com";
+      apiKeyForRequest = openaiApiKey as string;
+    } else if (backend === "deepseek") {
+      apiUrlForRequest = "https://api.deepseek.com";
+      apiKeyForRequest = openaiApiKey as string; // Use the same API key field
+    } else {
+      apiUrlForRequest = apiUrl;
+      apiKeyForRequest = apiKey;
+    }
 
     return chatViaOpenAiCompatible({
       model,
       body,
-      apiUrl: openAiLikeApiUrl,
-      apiKey: openAiLikeApiKey,
+      apiUrl: apiUrlForRequest,
+      apiKey: apiKeyForRequest,
       backend,
       httpClient,
     });
@@ -161,6 +172,10 @@ function resolveInferenceBackend(
   if (keys.anthropicApiKey && /^claude/i.test(model)) {
     return "anthropic";
   }
+  // Deepseek models: deepseek-*
+  if (keys.openaiApiKey && /^deepseek/i.test(model)) {
+    return "deepseek";
+  }
   // OpenAI models: gpt-*, o[1-9]*, chatgpt-*
   if (keys.openaiApiKey && /^(gpt|o[1-9]|chatgpt)/i.test(model)) {
     return "openai";
@@ -174,7 +189,7 @@ async function chatViaOpenAiCompatible(params: {
   body: Record<string, unknown>;
   apiUrl: string;
   apiKey: string;
-  backend: "conway" | "openai";
+  backend: "conway" | "openai" | "deepseek";
   httpClient: ResilientHttpClient;
 }): Promise<InferenceResponse> {
   const resp = await params.httpClient.request(`${params.apiUrl}/v1/chat/completions`, {
@@ -182,7 +197,7 @@ async function chatViaOpenAiCompatible(params: {
     headers: {
       "Content-Type": "application/json",
       Authorization:
-        params.backend === "openai"
+        params.backend === "openai" || params.backend === "deepseek"
           ? `Bearer ${params.apiKey}`
           : params.apiKey,
     },
