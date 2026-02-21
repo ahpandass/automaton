@@ -150,7 +150,7 @@ export const STATIC_MODEL_BASELINE: Omit<ModelEntry, "lastSeen" | "createdAt" | 
     modelId: "deepseek-coder",
     provider: "deepseek",
     displayName: "DeepSeek Coder",
-    tierMinimum: "normal",
+    tierMinimum: "critical",
     costPer1kInput: 1,     // $0.10/M
     costPer1kOutput: 2,    // $0.20/M
     maxTokens: 32768,
@@ -181,11 +181,11 @@ export const DEFAULT_ROUTING_MATRIX: RoutingMatrix = {
     planning: { candidates: ["deepseek-chat", "gpt-5.2", "gpt-4.1"], maxTokens: 4096, ceilingCents: -1 },
   },
   low_compute: {
-    agent_turn: { candidates: ["gpt-5-mini", "gpt-4.1-mini"], maxTokens: 4096, ceilingCents: 10 },
-    heartbeat_triage: { candidates: ["gpt-4.1-nano", "gpt-4.1-mini"], maxTokens: 1024, ceilingCents: 2 },
-    safety_check: { candidates: ["gpt-4.1-mini", "gpt-4.1-nano"], maxTokens: 2048, ceilingCents: 5 },
-    summarization: { candidates: ["gpt-4.1-mini", "gpt-4.1-nano"], maxTokens: 2048, ceilingCents: 5 },
-    planning: { candidates: ["gpt-5-mini", "gpt-4.1-mini"], maxTokens: 2048, ceilingCents: 5 },
+    agent_turn: { candidates: ["deepseek-chat", "gpt-5-mini", "gpt-4.1-mini"], maxTokens: 4096, ceilingCents: 10 },
+    heartbeat_triage: { candidates: ["deepseek-chat", "gpt-4.1-nano", "gpt-4.1-mini"], maxTokens: 1024, ceilingCents: 2 },
+    safety_check: { candidates: ["deepseek-chat", "gpt-4.1-mini", "gpt-4.1-nano"], maxTokens: 2048, ceilingCents: 5 },
+    summarization: { candidates: ["deepseek-chat", "gpt-4.1-mini", "gpt-4.1-nano"], maxTokens: 2048, ceilingCents: 5 },
+    planning: { candidates: ["deepseek-chat", "gpt-5-mini", "gpt-4.1-mini"], maxTokens: 2048, ceilingCents: 5 },
   },
   critical: {
     agent_turn: { candidates: ["deepseek-chat", "gpt-4.1-nano"], maxTokens: 2048, ceilingCents: 3 },
@@ -207,7 +207,7 @@ export const DEFAULT_ROUTING_MATRIX: RoutingMatrix = {
 
 export const DEFAULT_MODEL_STRATEGY_CONFIG: ModelStrategyConfig = {
   inferenceModel: "deepseek-chat",
-  lowComputeModel: "gpt-4.1-mini",
+  lowComputeModel: "deepseek-chat",
   criticalModel: "deepseek-chat",
   maxTokensPerTurn: 4096,
   hourlyBudgetCents: 0,
