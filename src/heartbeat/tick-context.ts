@@ -46,10 +46,18 @@ export async function buildTickContext(
   const tickId = generateTickId();
   const startedAt = new Date();
 
-  // Skip fetching credit balance when Conway API is not available
-  // Return a default value instead
+  // Calculate credit balance from USDC when Conway API is not available
+  // Credit balance = USDC balance * 100 (1 USDC = 100 credits cents)
   let creditBalance = 0;
-  logger.debug("Skipping credit balance fetch (Conway API may not be available)");
+  if (walletAddress) {
+    try {
+      const usdcBalance = await getUsdcBalance(walletAddress);
+      creditBalance = Math.floor(usdcBalance * 100);
+      logger.debug(`Calculated credit balance from USDC: $${usdcBalance.toFixed(4)} -> ${creditBalance} cents`);
+    } catch (err: any) {
+      logger.error("Failed to fetch USDC balance for credit calculation", err instanceof Error ? err : undefined);
+    }
+  }
 
   let usdcBalance = 0;
   if (walletAddress) {
