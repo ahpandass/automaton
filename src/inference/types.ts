@@ -136,7 +136,7 @@ export const STATIC_MODEL_BASELINE: Omit<ModelEntry, "lastSeen" | "createdAt" | 
     modelId: "deepseek-chat",
     provider: "deepseek",
     displayName: "DeepSeek Chat",
-    tierMinimum: "normal",
+    tierMinimum: "critical",
     costPer1kInput: 1,     // $0.10/M (Deepseek is much cheaper)
     costPer1kOutput: 2,    // $0.20/M
     maxTokens: 32768,
@@ -188,11 +188,11 @@ export const DEFAULT_ROUTING_MATRIX: RoutingMatrix = {
     planning: { candidates: ["gpt-5-mini", "gpt-4.1-mini"], maxTokens: 2048, ceilingCents: 5 },
   },
   critical: {
-    agent_turn: { candidates: ["gpt-4.1-nano"], maxTokens: 2048, ceilingCents: 3 },
-    heartbeat_triage: { candidates: ["gpt-4.1-nano"], maxTokens: 512, ceilingCents: 1 },
-    safety_check: { candidates: ["gpt-4.1-nano"], maxTokens: 1024, ceilingCents: 2 },
-    summarization: { candidates: [], maxTokens: 0, ceilingCents: 0 },
-    planning: { candidates: [], maxTokens: 0, ceilingCents: 0 },
+    agent_turn: { candidates: ["deepseek-chat", "gpt-4.1-nano"], maxTokens: 2048, ceilingCents: 3 },
+    heartbeat_triage: { candidates: ["deepseek-chat", "gpt-4.1-nano"], maxTokens: 512, ceilingCents: 1 },
+    safety_check: { candidates: ["deepseek-chat", "gpt-4.1-nano"], maxTokens: 1024, ceilingCents: 2 },
+    summarization: { candidates: ["deepseek-chat"], maxTokens: 1024, ceilingCents: 1 },
+    planning: { candidates: ["deepseek-chat"], maxTokens: 1024, ceilingCents: 1 },
   },
   dead: {
     agent_turn: { candidates: [], maxTokens: 0, ceilingCents: 0 },
@@ -208,7 +208,7 @@ export const DEFAULT_ROUTING_MATRIX: RoutingMatrix = {
 export const DEFAULT_MODEL_STRATEGY_CONFIG: ModelStrategyConfig = {
   inferenceModel: "deepseek-chat",
   lowComputeModel: "gpt-4.1-mini",
-  criticalModel: "gpt-4.1-nano",
+  criticalModel: "deepseek-chat",
   maxTokensPerTurn: 4096,
   hourlyBudgetCents: 0,
   sessionBudgetCents: 0,
