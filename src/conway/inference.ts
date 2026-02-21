@@ -182,19 +182,26 @@ function resolveInferenceBackend(
     deepseekApiKey?: string;
   },
 ): InferenceBackend {
+  // Debug logging
+  console.error(`[DEBUG] resolveInferenceBackend: model="${model}", deepseekApiKey exists=${!!keys.deepseekApiKey}, trimmed=${keys.deepseekApiKey?.trim()}`);
+  
   // Anthropic models: claude-*
   if (keys.anthropicApiKey && keys.anthropicApiKey.trim() && /^claude/i.test(model)) {
+    console.error(`[DEBUG] resolveInferenceBackend: returning "anthropic"`);
     return "anthropic";
   }
   // Deepseek models: deepseek-*
   if (keys.deepseekApiKey && keys.deepseekApiKey.trim() && /^deepseek/i.test(model)) {
+    console.error(`[DEBUG] resolveInferenceBackend: returning "deepseek"`);
     return "deepseek";
   }
   // OpenAI models: gpt-*, o[1-9]*, chatgpt-*
   if (keys.openaiApiKey && keys.openaiApiKey.trim() && /^(gpt|o[1-9]|chatgpt)/i.test(model)) {
+    console.error(`[DEBUG] resolveInferenceBackend: returning "openai"`);
     return "openai";
   }
   // Default: Conway proxy (handles all models including unknown ones)
+  console.error(`[DEBUG] resolveInferenceBackend: returning "conway" (default)`);
   return "conway";
 }
 
