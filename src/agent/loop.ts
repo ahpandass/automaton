@@ -558,7 +558,7 @@ async function getFinancialState(
       // Since we don't have direct access to InferenceBudgetTracker here,
       // we'll use a simple query to get total costs
       const result = db.raw.prepare(`
-        SELECT SUM(cost_cents) as total_cents 
+        SELECT SUM(cost_cents)/100 as total_cents 
         FROM inference_costs 
         WHERE created_at >= date('now', '-30 days')
       `).get() as { total_cents: number | null };
