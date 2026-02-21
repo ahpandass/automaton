@@ -74,11 +74,18 @@ export function createInferenceClient(
       body.tool_choice = "auto";
     }
 
-    const backend = resolveInferenceBackend(model, {
-      openaiApiKey,
-      anthropicApiKey,
-      deepseekApiKey: options.deepseekApiKey,
-    });
+    // Force deepseek backend if model is deepseek-* and deepseekApiKey is set
+    let backend: InferenceBackend;
+    if (/^deepseek/i.test(model) && options.deepseekApiKey && options.deepseekApiKey.trim()) {
+      console.error(`[DEBUG] chat: forcing deepseek backend for model="${model}"`);
+      backend = "deepseek";
+    } else {
+      backend = resolveInferenceBackend(model, {
+        openaiApiKey,
+        anthropicApiKey,
+        deepseekApiKey: options.deepseekApiKey,
+      });
+    }
 
     // Special handling for deepseek models: if no deepseek API key is set,
     // we cannot use Conway API because it requires credits.
