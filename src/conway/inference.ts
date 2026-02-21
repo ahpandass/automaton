@@ -80,6 +80,17 @@ export function createInferenceClient(
       deepseekApiKey: options.deepseekApiKey,
     });
 
+    // Special handling for deepseek models: if no deepseek API key is set,
+    // we cannot use Conway API because it requires credits.
+    // Provide a clear error message.
+    if (/^deepseek/i.test(model) && backend === "conway") {
+      throw new Error(
+        `Cannot use deepseek model "${model}" via Conway API without credits. ` +
+        `Please set DEEPSEEK_API_KEY environment variable or add deepseekApiKey to config. ` +
+        `Alternatively, fund your Conway account with credits.`
+      );
+    }
+
     if (backend === "anthropic") {
       return chatViaAnthropic({
         model,
@@ -172,15 +183,15 @@ function resolveInferenceBackend(
   },
 ): InferenceBackend {
   // Anthropic models: claude-*
-  if (keys.anthropicApiKey && /^claude/i.test(model)) {
+  if (keys.anthropicApiKey && keys.anthropicApiKey.trim() && /^claude/i.test(model)) {
     return "anthropic";
   }
   // Deepseek models: deepseek-*
-  if (keys.deepseekApiKey && /^deepseek/i.test(model)) {
+  if (keys.deepseekApiKey && keys.deepseekApiKey.trim() && /^deepseek/i.test(model)) {
     return "deepseek";
   }
   // OpenAI models: gpt-*, o[1-9]*, chatgpt-*
-  if (keys.openaiApiKey && /^(gpt|o[1-9]|chatgpt)/i.test(model)) {
+  if (keys.openaiApiKey && keys.openaiApiKey.trim() && /^(gpt|o[1-9]|chatgpt)/i.test(model)) {
     return "openai";
   }
   // Default: Conway proxy (handles all models including unknown ones)
