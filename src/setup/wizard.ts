@@ -91,10 +91,16 @@ export async function runSetupWizard(): Promise<AutomatonConfig> {
     console.log(chalk.yellow("  Warning: Anthropic keys usually start with sk-ant-. Saving anyway."));
   }
 
-  if (openaiApiKey || anthropicApiKey) {
+  const deepseekApiKey = await promptOptional("Deepseek API key (sk-..., optional)");
+  if (deepseekApiKey && !deepseekApiKey.startsWith("sk-")) {
+    console.log(chalk.yellow("  Warning: Deepseek keys usually start with sk-. Saving anyway."));
+  }
+
+  if (openaiApiKey || anthropicApiKey || deepseekApiKey) {
     const providers = [
       openaiApiKey ? "OpenAI" : null,
       anthropicApiKey ? "Anthropic" : null,
+      deepseekApiKey ? "Deepseek" : null,
     ].filter(Boolean).join(", ");
     console.log(chalk.green(`  Provider keys saved: ${providers}\n`));
   } else {
@@ -149,6 +155,7 @@ export async function runSetupWizard(): Promise<AutomatonConfig> {
     apiKey,
     openaiApiKey: openaiApiKey || undefined,
     anthropicApiKey: anthropicApiKey || undefined,
+    deepseekApiKey: deepseekApiKey || undefined,
     treasuryPolicy,
   });
 
