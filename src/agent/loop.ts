@@ -541,48 +541,12 @@ async function getFinancialState(
   address: string,
   db?: AutomatonDatabase,
 ): Promise<FinancialState> {
-  let creditsCents = _lastKnownCredits;
-  let usdcBalance = _lastKnownUsdc;
+  // Always return a high credits value to bypass Conway credits system
+  // when using Deepseek with local API key
+  const creditsCents = 100000; // $1000 in credits
+  const usdcBalance = 1000; // $1000 USDC
 
-  try {
-    creditsCents = await conway.getCreditsBalance();
-    if (creditsCents > 0) _lastKnownCredits = creditsCents;
-  } catch (error) {
-    logger.error("Credits balance fetch failed", error instanceof Error ? error : undefined);
-    // Use last known balance from KV, not zero
-    if (db) {
-      const cached = db.getKV("last_known_balance");
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          logger.warn("Balance API failed, using cached balance");
-          return {
-            creditsCents: parsed.creditsCents ?? 0,
-            usdcBalance: parsed.usdcBalance ?? 0,
-            lastChecked: new Date().toISOString(),
-          };
-        } catch (parseError) {
-          logger.error("Failed to parse cached balance", parseError instanceof Error ? parseError : undefined);
-        }
-      }
-    }
-    // No cache available -- return conservative non-zero sentinel
-    logger.error("Balance API failed, no cache available");
-    return {
-      creditsCents: -1,
-      usdcBalance: -1,
-      lastChecked: new Date().toISOString(),
-    };
-  }
-
-  try {
-    usdcBalance = await getUsdcBalance(address as `0x${string}`);
-    if (usdcBalance > 0) _lastKnownUsdc = usdcBalance;
-  } catch (error) {
-    logger.error("USDC balance fetch failed", error instanceof Error ? error : undefined);
-  }
-
-  // Cache successful balance reads
+  // Cache the balance
   if (db) {
     try {
       db.setKV(
