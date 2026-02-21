@@ -1206,8 +1206,8 @@ export interface ModelStrategyConfig {
 
 export const DEFAULT_MODEL_STRATEGY_CONFIG: ModelStrategyConfig = {
   inferenceModel: "deepseek-chat",
-  lowComputeModel: "gpt-4.1-mini",
-  criticalModel: "gpt-4.1-nano",
+  lowComputeModel: "deepseek-chat",
+  criticalModel: "deepseek-chat",
   maxTokensPerTurn: 4096,
   hourlyBudgetCents: 0,
   sessionBudgetCents: 0,
