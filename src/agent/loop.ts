@@ -141,7 +141,7 @@ export async function runAgentLoop(
   db.setAgentState("running");
   onStateChange?.("running");
 
-  log(config, `[WAKE UP] ${config.name} is alive. Credits: $${(financial.creditsCents / 100).toFixed(2)}`);
+  log(config, `[WAKE UP] ${config.name} is alive. Credits: $${(financial.creditsCents / 100).toFixed(2)} (from USDC: $${financial.usdcBalance.toFixed(4)})`);
 
   // ─── The Loop ──────────────────────────────────────────────
 
@@ -541,17 +541,48 @@ async function getFinancialState(
   address: string,
   db?: AutomatonDatabase,
 ): Promise<FinancialState> {
-  // Always return a high credits value to bypass Conway credits system
-  // when using Deepseek with local API key
-  const creditsCents = 100000; // $1000 in credits
-  const usdcBalance = 1000; // $1000 USDC
+  let usdcBalance = 0;
+  let totalInferenceCostCents = 0;
+
+  try {
+    // Get USDC balance from blockchain
+    usdcBalance = await getUsdcBalance(address as `0x${string}`);
+  } catch (error) {
+    logger.error("USDC balance fetch failed", error instanceof Error ? error : undefined);
+  }
+
+  // Get total inference costs from database
+  if (db) {
+    try {
+      // We need to access the raw database to get inference costs
+      // Since we don't have direct access to InferenceBudgetTracker here,
+      // we'll use a simple query to get total costs
+      const result = db.raw.prepare(`
+        SELECT SUM(cost_cents) as total_cents 
+        FROM inference_costs 
+        WHERE created_at >= date('now', '-30 days')
+      `).get() as { total_cents: number | null };
+      
+      totalInferenceCostCents = result.total_cents || 0;
+    } catch (error) {
+      logger.error("Failed to get inference costs", error instanceof Error ? error : undefined);
+    }
+  }
+
+  // Calculate remaining USDC after deducting inference costs
+  // Convert inference costs from cents to USDC (1 USDC = 100 cents)
+  const inferenceCostUsdc = totalInferenceCostCents / 100;
+  const remainingUsdc = Math.max(0, usdcBalance - inferenceCostUsdc);
+  
+  // Convert remaining USDC to credits (1 USDC = 100 credits cents)
+  const creditsCents = Math.floor(remainingUsdc * 100);
 
   // Cache the balance
   if (db) {
     try {
       db.setKV(
         "last_known_balance",
-        JSON.stringify({ creditsCents, usdcBalance }),
+        JSON.stringify({ creditsCents, usdcBalance: remainingUsdc }),
       );
     } catch (error) {
       logger.error("Failed to cache balance", error instanceof Error ? error : undefined);
@@ -560,7 +591,7 @@ async function getFinancialState(
 
   return {
     creditsCents,
-    usdcBalance,
+    usdcBalance: remainingUsdc,
     lastChecked: new Date().toISOString(),
   };
 }
