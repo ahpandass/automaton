@@ -211,6 +211,7 @@ async function run(): Promise<void> {
     apiKey,
     defaultModel: config.inferenceModel,
     maxTokens: config.maxTokensPerTurn,
+    lowComputeModel: config.modelStrategy?.lowComputeModel || "deepseek-chat",
     openaiApiKey: config.openaiApiKey,
     anthropicApiKey: config.anthropicApiKey,
     deepseekApiKey: config.deepseekApiKey,
